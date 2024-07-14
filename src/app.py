@@ -1,7 +1,5 @@
-import time
 from contextlib import asynccontextmanager
 
-import asyncpg
 import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
@@ -19,7 +17,6 @@ db = None
 async def lifespan(local_app: FastAPI):
     global db
     db = await DB().create_pool()
-    print('Connection successful')
     yield
     db.close()
 
@@ -52,6 +49,23 @@ async def api():
     SELECT * FROM ingredient
     """)
 
+    return result
+
+
+@app.get('/api/v1/dishes/')
+async def api():
+    result = await db.fetch("""
+    SELECT * FROM dish
+    """)
+    return result
+
+
+@app.get('/api/v1/dishes/{path_id}/')
+async def api(path_id):
+    result = await db.fetchrow("""
+    SELECT * FROM dish
+    WHERE id = $1;
+    """, *(int(path_id),))
     return result
 
 
